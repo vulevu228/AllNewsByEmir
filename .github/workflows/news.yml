@@ -1,10 +1,11 @@
 name: news
 
 # Every 15 minutes: fetch the feeds, update news.json, email new concerning AI stories, publish the
-# page to GitHub Pages. GitHub can start scheduled runs late or skip one when it's busy.
+# page to GitHub Pages. Started by a Cloudflare Worker cron (cloudflare/trigger.js), because GitHub's own
+# schedule often starts late or skips runs; the hourly schedule here is only a backup.
 on:
   schedule:
-    - cron: "4,19,34,49 * * * *"   # off the full quarter hours, when GitHub is busiest
+    - cron: "41 * * * *"
   workflow_dispatch:
 
 permissions:

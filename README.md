@@ -48,5 +48,6 @@ Claude usage) never leaves the cache.
 Local run: `pip install -r requirements.txt`, then `python run.py --no-email` and
 `python -m http.server -d "data/$web" 8000`.
 
-GitHub can start scheduled runs a few minutes late, or skip one when it's busy. The workflow also makes an
+GitHub's own schedule often starts late or skips runs, so a Cloudflare Worker cron (`cloudflare/trigger.js`,
+free plan) starts the workflow every 15 minutes through the API; the workflow's hourly schedule is only a backup. The workflow also makes an
 empty commit once a month, because GitHub pauses schedules in repositories without activity for 60 days.

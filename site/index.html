@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>All News by Emir</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f6feb'/%3E%3Cpath d='M10 22V10h3l6 7.5V10h3v12h-3l-6-7.5V22z' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #14171c; --muted: #5d6673; --line: #e3e6ea;
+  --accent: #1f6feb; --accent-soft: #e8f0fe;
+  --alert: #b42318; --alert-soft: #fdeceb; --warn: #9a6700; --warn-soft: #fff4d6;
+  --ok: #1a7f37; --ok-soft: #e6f4ea; --new: #1f6feb;
+  --shadow: 0 1px 2px rgba(16,24,40,.05);
+  --base: #f4f5f8; --tint: #4f6bed; --tint-mix: 14%; --glow-mix: 45%; --panel-base: #ffffff; --panel-mix: 4%;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216; --panel: #171b21; --ink: #e8ebef; --muted: #98a2b0; --line: #262c34;
+    --accent: #6ea8ff; --accent-soft: #1a2638;
+    --alert: #ff8a80; --alert-soft: #3a1c1b; --warn: #f2c14e; --warn-soft: #33290f;
+    --ok: #5fd08a; --ok-soft: #13291c; --new: #6ea8ff; --shadow: none;
+    --base: #0c1016; --tint-mix: 19%; --glow-mix: 48%; --panel-base: #171b21; --panel-mix: 7%;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; color: var(--ink); min-height: 100vh;
+  --bg: color-mix(in oklab, var(--tint) var(--tint-mix), var(--base));
+  --panel: color-mix(in oklab, var(--tint) var(--panel-mix), var(--panel-base));
+  background: radial-gradient(1100px 560px at 50% -160px, color-mix(in oklab, var(--tint) var(--glow-mix), transparent), transparent 72%) fixed,
+    radial-gradient(800px 520px at 100% 100%, color-mix(in oklab, var(--tint) calc(var(--glow-mix) * .55), transparent), transparent 70%) fixed,
+    var(--bg);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+a { color: inherit; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 64px; }
+
+header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.bar { max-width: 860px; margin: 0 auto; padding: 14px 16px 10px; }
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+.meta { color: var(--muted); font-size: 13px; }
+.spacer { flex: 1; }
+.chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px;
+  font-size: 13px; cursor: pointer; color: var(--ink); white-space: nowrap; }
+.chip.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.chip.danger { color: var(--alert); background: var(--alert-soft); border-color: transparent; }
+
+.controls { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0;
+  scroll-behavior: smooth; }
+.scroller { position: relative; display: flex; align-items: center; flex: 1 1 100%; min-width: 0; }
+.scroller > .tabs, .scroller > .chips { flex: 1 1 auto; }
+.scroller.fl > :not(.arr) { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px); mask-image: linear-gradient(90deg, transparent 0, #000 48px); }
+.scroller.fr > :not(.arr) { -webkit-mask-image: linear-gradient(270deg, transparent 0, #000 48px); mask-image: linear-gradient(270deg, transparent 0, #000 48px); }
+.scroller.fl.fr > :not(.arr) { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%); }
+.arr { position: absolute; top: 50%; transform: translateY(-50%); z-index: 1; width: 30px; height: 30px; padding: 0;
+  border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+  display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.arr:hover { border-color: var(--tint); color: color-mix(in oklab, var(--tint) 78%, var(--ink)); }
+.arr svg { width: 14px; height: 14px; }
+.arr.l { left: 0; } .arr.r { right: 0; }
+.arr[hidden] { display: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { border: 0; background: transparent; color: var(--muted); padding: 6px 10px; border-radius: 8px;
+  font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { background: color-mix(in oklab, var(--tint) 17%, var(--panel));
+  color: color-mix(in oklab, var(--tint) 78%, var(--ink)); font-weight: 600; }
+.tab i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.tab .n { font-size: 12px; opacity: .75; margin-left: 3px; }
+.filters { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; min-width: 0;
+  scroll-behavior: smooth; }
+.chips::-webkit-scrollbar { display: none; }
+.rchip { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px;
+  padding: 4px 11px; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.rchip:hover { color: var(--ink); }
+.rchip[aria-pressed="true"] { background: color-mix(in oklab, var(--tint) 17%, var(--panel)); border-color: transparent;
+  color: color-mix(in oklab, var(--tint) 78%, var(--ink)); font-weight: 600; }
+.rchip.alert[aria-pressed="true"] { background: var(--alert-soft); color: var(--alert); }
+.rchip .n { font-size: 11.5px; opacity: .75; margin-left: 3px; }
+.search { display: flex; gap: 8px; }
+input[type=search], select { font: inherit; font-size: 14px; color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+input[type=search] { flex: 1 1 180px; min-width: 0; }
+select { max-width: 45%; }
+.langsel { max-width: none; cursor: pointer; }
+.item h3 a[data-orig] { text-decoration-style: dotted; }
+.trnote { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+
+.cost { margin: 16px 0 0; }
+.cost[hidden] { display: none; }
+.cost-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 2px 10px; }
+.cost-head h2 { font-size: 15px; margin: 0; }
+.cost-head span { color: var(--muted); font-size: 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 12px; }
+.card { perspective: 1200px; min-width: 0; }
+.card-in { display: grid; height: 100%; transition: transform .55s cubic-bezier(.2,.7,.2,1); transform-style: preserve-3d; }
+.card.flipped .card-in { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 14px 12px; box-shadow: var(--shadow); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; }
+.face.back { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) { .card-in { transition: none; } }
+.face .hd { display: flex; align-items: center; gap: 8px; }
+.face .hd .l { color: var(--muted); font-size: 12.5px; flex: 1; }
+.flip { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px;
+  font: inherit; font-size: 11.5px; padding: 1px 9px; cursor: pointer; }
+.flip:hover { color: var(--accent); border-color: var(--accent); }
+.face .v { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.face .v small { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.face .cap { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.chart { position: relative; margin-top: 8px; height: 120px; touch-action: pan-y; }
+.chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.chart text { font: 10.5px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; fill: var(--muted);
+  font-variant-numeric: tabular-nums; }
+.chart .lim-t { fill: var(--alert); font-weight: 600; }
+.tip { position: absolute; top: -6px; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 11.5px;
+  padding: 3px 7px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -100%); font-variant-numeric: tabular-nums; }
+.tip[hidden] { display: none; }
+.chart.mini { height: 64px; margin-top: 14px; }
+.mini-l { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: 12px; }
+.bullet { position: relative; height: 10px; background: var(--line); border-radius: 99px; margin: 12px 0 4px; }
+.bullet > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--ok); min-width: 4px; }
+.bullet.warn > i { background: var(--warn); } .bullet.danger > i { background: var(--alert); }
+.bullet > b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--muted); border-radius: 1px; }
+.bullet-l { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bars { margin-top: 4px; display: grid; gap: 5px; font-size: 12px; }
+.bars h4 { margin: 6px 0 0; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.bar-r { display: grid; grid-template-columns: minmax(0, 8em) 1fr auto; gap: 8px; align-items: center; }
+.bar-r > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-r .tr { height: 8px; }
+.bar-r .tr i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bar-r > span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.face dl { margin: 8px 0 0; display: grid; grid-template-columns: 1fr auto; gap: 0 10px; font-size: 12.5px; }
+.face dt { color: var(--muted); padding: 4px 0; border-top: 1px solid var(--line); }
+.face dd { margin: 0; padding: 4px 0; border-top: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+.face dd.sub, .face dt.sub { padding-left: 10px; font-size: 12px; }
+.cost .note { color: var(--muted); font-size: 12px; margin: 10px 2px 0; }
+.pipes { display: grid; gap: 2px; margin-top: 6px; }
+.pipe { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 4px 9px; align-items: baseline;
+  padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.pipe:first-child { border-top: 0; }
+.pipe .st { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); align-self: center; }
+.pipe .st.bad { background: var(--alert); }
+.pipe b { font-weight: 600; }
+.pipe .m { color: var(--muted); font-size: 12px; grid-column: 2 / 4; font-variant-numeric: tabular-nums; }
+.pipe .t { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hot { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 3px 10px; font-size: 12.5px; margin-top: 4px; }
+.hot span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hot .n { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.hot .up { color: var(--alert); } .hot .down { color: var(--ok); }
+.face a.lnk { color: var(--accent); text-decoration: none; } .face a.lnk:hover { text-decoration: underline; }
+.brief { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 18px 0 4px;
+  box-shadow: var(--shadow); border-left: 3px solid color-mix(in oklab, var(--tint) 70%, transparent); }
+.brief h2 { font-size: 13px; margin: 0; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.brief h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+.brief ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; }
+.brief li a { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.item .why { color: var(--alert); font-size: 13px; margin-top: 4px; -webkit-line-clamp: unset; }
+
+.day { margin: 26px 0 8px; font-size: 13px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; box-shadow: var(--shadow); position: relative; }
+.item { border-left: 3px solid color-mix(in oklab, var(--c, var(--line)) 70%, transparent); }
+.item.concerning { border-left: 4px solid var(--alert); }
+.item .src { font-size: 12.5px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.item .src b { color: var(--ink); font-weight: 600; }
+.item h3 { font-size: 17px; line-height: 1.35; margin: 4px 0 4px; font-weight: 620;
+  display: flex; gap: 10px; align-items: flex-start; }
+.rd { flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 50%; cursor: pointer; padding: 0;
+  border: 2px solid var(--muted); background: transparent; color: transparent; display: grid; place-items: center; }
+.rd svg { width: 12px; height: 12px; }
+.rd:hover { border-color: var(--accent); }
+.item.read .rd { background: var(--ok); border-color: var(--ok); color: #fff; }
+.item.read h3 a { color: var(--muted); font-weight: 500; }
+.item.read { opacity: .8; }
+.item h3 a { text-decoration: none; }
+.item h3 a:hover { text-decoration: underline; }
+.item h3 a:visited { color: var(--muted); }
+.item p { margin: 0; color: var(--muted); font-size: 14.5px; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.item.open p { -webkit-line-clamp: unset; }
+.badge { font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 1px 7px; }
+.badge.alert { background: var(--alert-soft); color: var(--alert); }
+.badge.cat { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.badge.t { background: color-mix(in oklab, var(--c) 15%, var(--panel)); color: color-mix(in oklab, var(--c) 72%, var(--ink)); }
+.badge.rg { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 500; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--new); display: inline-block; }
+.empty { text-align: center; color: var(--muted); padding: 48px 0; }
+.more { display: block; margin: 20px auto; }
+footer { color: var(--muted); font-size: 12px; margin-top: 32px; line-height: 1.8; }
+footer .bad { color: var(--alert); }
+@media (max-width: 560px) { h1 { font-size: 18px; } .item h3 { font-size: 16px; } .meta { width: 100%; order: 3; } }
+
+/* ---------- editorial type and finish (overrides the base rules above) ---------- */
+:root {
+  --serif: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --display: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --base: #f5f2ea; --panel-base: #fffdf8; --line: #e4ddd0; --ink: #16140f; --muted: #6b6558;
+  --tint-mix: 9%; --glow-mix: 30%; --panel-mix: 2%;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --base: #0b0d11; --panel-base: #14171d; --line: #252a33; --ink: #ece8df; --muted: #9a958a;
+    --tint-mix: 15%; --glow-mix: 40%; --panel-mix: 5%; }
+}
+body { font: 15px/1.55 var(--sans); font-feature-settings: "ss01", "cv11"; -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in oklab, var(--tint) 30%, transparent); }
+
+header { border-bottom: 0; box-shadow: 0 1px 0 var(--line), 0 3px 0 -1px var(--line); }
+.bar { padding: 16px 16px 8px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.1; letter-spacing: -.025em; }
+h1 em { font-style: normal; font-weight: 500; color: color-mix(in oklab, var(--tint) 55%, var(--ink)); }
+.meta { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; }
+.chip { font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: .02em; border-radius: 4px; padding: 5px 11px; }
+
+.tabs { gap: 2px; }
+.tab { font-family: var(--sans); font-size: 13px; font-weight: 500; letter-spacing: .01em; border-radius: 0; padding: 8px 10px 9px; }
+.tab[aria-selected="true"] { background: transparent; font-weight: 600;
+  box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--tint) 85%, var(--ink)); }
+.tab i { width: 6px; height: 6px; }
+.tab .n { font-size: 11px; font-variant-numeric: tabular-nums; }
+.rchip { font-size: 12px; border-radius: 4px; letter-spacing: .01em; }
+.rchip[aria-pressed="true"] { background: color-mix(in oklab, var(--tint) 12%, var(--panel)); border-color: color-mix(in oklab, var(--tint) 40%, var(--line)); }
+input[type=search], select { font-family: var(--sans); border-radius: 4px; }
+input[type=search] { font-family: var(--serif); font-style: italic; font-size: 15px; }
+
+.day { font: 600 19px/1.2 var(--display); letter-spacing: -.01em; text-transform: none; color: var(--ink);
+  margin: 34px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.item { border-radius: 3px; padding: 16px 20px 17px; margin-bottom: 12px; box-shadow: none; }
+.item .src { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; gap: 10px; }
+.item .src b { font-weight: 600; letter-spacing: .09em; }
+.item h3 { font-family: var(--serif); font-size: 21px; line-height: 1.24; font-weight: 600; letter-spacing: -.008em;
+  margin: 7px 0 6px; font-optical-sizing: auto; }
+.item.read h3 a { font-weight: 400; }
+.item p { font-family: var(--serif); font-size: 16px; line-height: 1.55; color: color-mix(in oklab, var(--ink) 72%, var(--muted)); }
+.item .why { font-style: italic; font-size: 14.5px; color: var(--alert); }
+.badge { font-family: var(--sans); font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  border-radius: 2px; padding: 2px 6px; }
+.rd { width: 20px; height: 20px; margin-top: 4px; border-width: 1.5px; }
+
+.cost-head h2, .brief h2 { font: 650 18px/1.2 var(--display); letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+.cost-head span, .brief h2 span { font-family: var(--sans); font-style: normal; font-size: 11px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); }
+.face { border-radius: 4px; box-shadow: none; padding: 16px 16px 14px; }
+.face .hd .l { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.flip { border-radius: 3px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
+.face .v { font-family: var(--serif); font-size: 34px; font-weight: 500; letter-spacing: -.02em; line-height: 1.1; }
+.face .v small { font-family: var(--sans); font-size: 11.5px; letter-spacing: .04em; }
+.mini-l, .bars h4 { font-size: 10px; letter-spacing: .12em; }
+.pipe b { font-family: var(--serif); font-size: 16px; font-weight: 600; }
+.hot span:nth-child(3n+1) { font-family: var(--serif); font-size: 14px; }
+.face dt, .face dd { font-size: 12.5px; }
+
+.brief { border-radius: 3px; box-shadow: none; padding: 18px 22px 18px; border-left-width: 3px; }
+.brief h2 { display: flex; gap: 12px; align-items: baseline; }
+.brief ol { font-family: var(--serif); font-size: 17px; line-height: 1.5; gap: 10px; padding-left: 0; list-style: none;
+  counter-reset: pt; margin-top: 12px; }
+.brief li { counter-increment: pt; display: grid; grid-template-columns: 28px 1fr; }
+.brief li::before { content: counter(pt); font: 600 16px/1.5 var(--display);
+  color: color-mix(in oklab, var(--tint) 70%, var(--ink)); padding-top: 1px; }
+.brief li a { font-family: var(--sans); font-size: 10.5px; font-weight: 600; text-decoration: none; margin-left: 3px;
+  vertical-align: super; color: color-mix(in oklab, var(--tint) 70%, var(--ink)); }
+
+footer { font-family: var(--serif); font-style: italic; font-size: 13.5px; line-height: 1.7;
+  border-top: 1px solid var(--line); padding-top: 14px; }
+.more { font-family: var(--serif); font-style: italic; font-size: 15px; padding: 7px 18px; }
+@media (max-width: 560px) {
+  h1 { font-size: 22px; }
+  .item { padding: 14px 15px; }
+  .item h3 { font-size: 18.5px; }
+  .item p { font-size: 15px; }
+  .day { font-size: 17px; }
+}
+.src .conf { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="top">
+      <h1>All News <em>by Emir</em></h1>
+      <span class="meta" id="meta">Loading...</span>
+      <span class="spacer"></span>
+      <button class="chip" id="markRead" title="Mark every story in the current view as read">Mark all read</button>
+    </div>
+    <div class="controls">
+      <div class="scroller"><div class="tabs" role="tablist" id="tabs" aria-label="Topics"></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters">
+    <div class="scroller"><div class="chips" id="sub"></div></div>
+    <div class="search">
+      <input type="search" id="q" placeholder="Search titles and summaries" aria-label="Search">
+      <select id="src" aria-label="Source"><option value="">All sources</option></select>
+    </div>
+  </div>
+  <section class="brief" id="brief" hidden></section>
+  <main id="list" aria-live="polite"></main>
+  <button class="chip more" id="more" hidden>Show more</button>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+// [key, label, colour]. To drop a topic: remove its row here and its feeds in world.py.
+const TOPICS = [
+  ["all", "All", "#4f6bed"], ["world", "World", "#2563eb"], ["ai", "AI", "#7c3aed"],
+  ["war", "War & conflict", "#dc2626"], ["economy", "Economy", "#ca8a04"], ["industry", "Industry", "#64748b"],
+  ["health", "Health", "#0d9488"], ["diseases", "Diseases", "#c026d3"], ["nature", "Nature", "#16a34a"],
+  ["fun", "Fun", "#f97316"],
+  ["science", "Science", "#0891b2"], ["space", "Space", "#4338ca"], ["tech", "Tech", "#0284c7"],
+  ["disasters", "Disasters", "#ea580c"], ["energy", "Energy", "#eab308"], ["politics", "Politics", "#1d4ed8"],
+];
+const TOPIC = Object.fromEntries(TOPICS.map(([k, l, c]) => [k, { l, c }]));
+const REGIONS = [["", "Everywhere"], ["na", "North America"], ["sa", "South America"], ["eu", "Europe"],
+  ["af", "Africa"], ["me", "Middle East"], ["as", "Asia"], ["oc", "Oceania"]];
+const REGION = Object.fromEntries(REGIONS);
+const AISUB = [["", "All AI"], ["concerning", "Concerning"], ["ai", "News"], ["lab", "Labs"],
+  ["community", "Community"], ["security", "Security"]];
+const CAT = { lab: "Lab", community: "Community", security: "Security" };
+const tagsOf = (it) => it.tags || ["ai"];
+const PAGE = 60;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let news = { items: [], feeds: {} };
+let scrolledTab = null;
+let tab = store.get("tab", "all"), region = store.get("region", ""), aisub = store.get("aisub", ""), shown = PAGE;
+let lastRead = store.get("lastRead", null);
+let readIds = new Set(store.get("readIds", []));
+const saveRead = () => {
+  if (news.items.length) { const live = new Set(news.items.map((i) => i.id)); readIds = new Set([...readIds].filter((id) => live.has(id))); }
+  store.set("readIds", [...readIds]);
+};
+const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const usd = (v) => "$" + (v < 1 ? v.toFixed(3) : v.toFixed(2));
+
+function ago(iso) {
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + " min ago";
+  if (s < 86400) return Math.round(s / 3600) + " h ago";
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+function dayLabel(iso) {
+  const d = new Date(iso), t = new Date();
+  const k = (x) => x.toDateString();
+  const y = new Date(t); y.setDate(t.getDate() - 1);
+  if (k(d) === k(t)) return "Today";
+  if (k(d) === k(y)) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+}
+
+const inTopic = (it, t) => t === "all" || tagsOf(it).includes(t);
+const inRegion = (it, r) => !r || it.region === r;
+const inSub = (it, a) => !a || (a === "concerning" ? it.concerning : it.category === a);
+const useRegion = () => tab !== "ai";
+function filtered() {
+  const q = $("q").value.trim().toLowerCase(), src = $("src").value;
+  return news.items.filter((it) => inTopic(it, tab) &&
+    (useRegion() ? inRegion(it, region) : inSub(it, aisub)) &&
+    (!src || it.source === src) &&
+    (!q || (it.title + " " + it.summary).toLowerCase().includes(q)));
+}
+
+function renderTabs() {
+  // the AI tab ignores regions (it has its own filters), so its count does too
+  const pool = news.items.filter((i) => inRegion(i, region));
+  const topicCount = (k) => (k === "ai" ? news.items : pool).filter((i) => inTopic(i, k)).length;
+  $("tabs").innerHTML = TOPICS.map(([k, l, c]) =>
+    `<button class="tab" role="tab" data-k="${k}" aria-selected="${k === tab}"><i style="background:${c}"></i>${l}<span class="n">${topicCount(k)}</span></button>`).join("");
+  const cur = TOPIC[tab].c;
+  document.documentElement.style.setProperty("--tint", cur);
+  if (scrolledTab === null) {  // first render: make sure the saved topic is visible
+    scrolledTab = tab;
+    $("tabs").querySelector('[aria-selected="true"]').scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
+  }
+  const pick = (k) => tab === "ai" ? aisub === k : region === k;
+  const inT = news.items.filter((i) => inTopic(i, tab));
+  const count = (k) => inT.filter((i) => tab === "ai" ? inSub(i, k) : inRegion(i, k)).length;
+  $("sub").setAttribute("aria-label", tab === "ai" ? "AI filters" : "Regions");
+  $("sub").innerHTML = (tab === "ai" ? AISUB : REGIONS).map(([k, l]) =>
+    `<button class="rchip${k === "concerning" ? " alert" : ""}" data-k="${k}" aria-pressed="${pick(k)}">${l}<span class="n">${count(k)}</span></button>`).join("");
+  updateArrows();
+  const sources = [...new Set(inT.map((i) => i.source))].sort();
+  const was = $("src").value;
+  $("src").innerHTML = `<option value="">All sources (${sources.length})</option>` +
+    sources.map((x) => `<option${x === was ? " selected" : ""}>${esc(x)}</option>`).join("");
+}
+function badges(it) {
+  let tags = tagsOf(it).filter((t) => TOPIC[t]);
+  if (tags.length > 1) tags = tags.filter((t) => t !== "world");
+  tags.sort((a, b) => TOPICS.findIndex((x) => x[0] === a) - TOPICS.findIndex((x) => x[0] === b));
+  const tc = (t) => it.conf?.topics?.[t], tip = (v) => v != null ? ` title="Confidence ${v.toFixed(2)}"` : "";
+  return (it.region ? `<span class="badge rg"${tip(it.conf?.region)}>${REGION[it.region]}</span>` : "")
+    + tags.slice(0, 3).map((t) => `<span class="badge t" style="--c:${TOPIC[t].c}"${tip(tc(t))}>${TOPIC[t].l}</span>`).join("")
+    + (CAT[it.category] ? `<span class="badge rg">${CAT[it.category]}</span>` : "");
+}
+// how sure the story's topics and region are: the weakest of them (the one shown on the card)
+function confOf(it) {
+  if (!it.conf) return null;
+  const v = [...Object.values(it.conf.topics || {}), ...(it.conf.region != null ? [it.conf.region] : [])];
+  return v.length ? Math.min(...v) : null;
+}
+function itemColour(it) {
+  const t = tagsOf(it).find((x) => x !== "world" && TOPIC[x]) || tagsOf(it)[0];
+  return TOPIC[t] ? TOPIC[t].c : "var(--line)";
+}
+
+function render() {
+  renderTabs();
+  const items = filtered();
+  let html = "", day = "";
+  for (const it of items.slice(0, shown)) {
+    const d = dayLabel(it.published);
+    if (d !== day) { html += `<div class="day">${esc(d)}</div>`; day = d; }
+    const isNew = lastRead && it.seen > lastRead;
+    const read = readIds.has(it.id);
+    html += `<article class="item${it.concerning ? " concerning" : ""}${read ? " read" : ""}" data-id="${esc(it.id)}" style="--c:${itemColour(it)}">
+      <div class="src">${isNew ? '<span class="dot" title="New since you last marked read"></span>' : ""}
+        <b>${esc(it.source)}</b><span>${ago(it.published)}</span>
+        ${badges(it)}
+        ${confOf(it) != null ? `<span class="conf" title="How sure the topics and region of this story are (0-1): from the feed = 1.00, from words in the headline or summary lower; below 0.70 a topic or region is left off">confidence ${confOf(it).toFixed(2)}</span>` : ""}
+        ${it.concerning ? (it.ai_reason ? `<span class="badge alert" title="Checked by Claude Haiku">Concerning</span>`
+          : `<span class="badge alert" title="Matched: ${esc(it.hits.join(", "))}">Concerning: ${esc(it.hits.slice(0, 3).join(", "))}</span>`) : ""}
+      </div>
+      <h3><button class="rd" aria-pressed="${read}" title="${read ? "Read - click to mark unread" : "Mark as read"}" aria-label="${read ? "Mark unread" : "Mark read"}">${CHECK}</button><a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.title)}</a></h3>
+      ${it.summary ? `<p>${esc(it.summary)}</p>` : ""}
+      ${it.concerning && it.ai_reason ? `<p class="why">Why: ${esc(it.ai_reason)}</p>` : ""}
+    </article>`;
+  }
+  $("list").innerHTML = html || `<div class="empty">Nothing matches.</div>`;
+  renderBrief();
+  $("more").hidden = items.length <= shown;
+}
+
+// daily Claude briefings sit on top of their topic tab (plain view only: not while searching,
+// filtering by source, or - on world topics - by region, since a briefing covers the whole world)
+const BRIEF_LABEL = { ai: "AI briefing", war: "War & conflict briefing" };
+function renderBrief() {
+  const all = news.briefings || (news.briefing ? { ai: news.briefing } : {});
+  const b = all[tab], el = $("brief");
+  const plain = !$("q").value && !$("src").value && (tab === "ai" ? !aisub : !region);
+  const show = b && b.points && b.points.length && plain;
+  el.hidden = !show;
+  if (!show) return;
+  const byId = Object.fromEntries(news.items.map((i) => [i.id, i]));
+  el.innerHTML = `<h2>${esc(BRIEF_LABEL[tab] || TOPIC[tab].l + " briefing")} <span>${esc(new Date(b.at).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }))} · written by Claude Haiku from the last 24 h${tab === "war" ? " of headlines + the World Events hotspot numbers" : ""}</span></h2>
+    <ol>${b.points.map((p) => `<li><span>${esc(p.text)}${p.ids.filter((i) => byId[i]).slice(0, 3).map((i, n) =>
+      `<a href="${esc(byId[i].link)}" target="_blank" rel="noopener" title="${esc(byId[i].source)}: ${esc(byId[i].title)}">[${n + 1}]</a>`).join("")}</span></li>`).join("")}</ol>`;
+}
+
+function renderFoot() {
+  const f = Object.entries(news.feeds || {});
+  const bad = f.filter(([, v]) => !v.ok);
+  $("foot").innerHTML = `${f.length} feeds${bad.length ? `, <span class="bad">${bad.length} failing: ${bad.map(([k]) => esc(k)).join(", ")}</span>` : ", all healthy"}.
+    AI stories are kept for 60 days, everything else for 3. Topics come from the feed plus keywords; regions from the feed or the first country named.
+    "Concerning" = an AI word and a security word (breach, malware, supply chain, leak...) in the same story from the AI feeds${news.ai && news.ai.on ? ", double-checked by Claude Haiku" : ""}; new ones are emailed.${news.ai && news.ai.on ? ` Claude this month: ${usd(news.ai.month_usd)} of $${news.ai.budget_usd} (${news.ai.calls} calls).` : ""}`;
+  $("meta").textContent = `${news.items.length} stories, updated ${ago(news.updated)}`;
+}
+
+async function load() {
+  try {
+    const r = await fetch("news.json", { cache: "no-cache" });
+    news = await r.json();
+    if (lastRead === null) { lastRead = news.updated; store.set("lastRead", lastRead); }
+  } catch { $("meta").textContent = "Could not load news.json"; }
+  renderFoot(); render();
+}
+
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  // clicking the selected topic again goes back to All
+  tab = b.dataset.k === tab ? "all" : b.dataset.k; store.set("tab", tab); $("src").value = ""; shown = PAGE; render();
+  $("tabs").querySelector('[aria-selected="true"]').scrollIntoView({ block: "nearest", inline: "nearest" });
+});
+// arrows on both scrolling rows: shown only when there is more in that direction
+const ARROW = (d) => `<svg viewBox="0 0 14 14" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const strips = [$("tabs"), $("sub")];
+strips.forEach((el) => {
+  const box = el.parentElement;
+  box.insertAdjacentHTML("afterbegin", `<button class="arr l" aria-label="Scroll left" hidden>${ARROW("M9 2.5L4.5 7 9 11.5")}</button>`);
+  box.insertAdjacentHTML("beforeend", `<button class="arr r" aria-label="Scroll right" hidden>${ARROW("M5 2.5L9.5 7 5 11.5")}</button>`);
+  box.querySelector(".arr.l").addEventListener("click", () => el.scrollBy({ left: -el.clientWidth * 0.7 }));
+  box.querySelector(".arr.r").addEventListener("click", () => el.scrollBy({ left: el.clientWidth * 0.7 }));
+  el.addEventListener("scroll", updateArrows, { passive: true });
+  el.addEventListener("wheel", (e) => {  // mouse wheel moves the row sideways
+    if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    e.preventDefault(); el.scrollBy({ left: e.deltaY, behavior: "auto" });
+  }, { passive: false });
+});
+function updateArrows() {
+  for (const el of strips) {
+    const box = el.parentElement, left = el.scrollLeft > 2, right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    box.querySelector(".arr.l").hidden = !left; box.querySelector(".arr.r").hidden = !right;
+    box.classList.toggle("fl", left); box.classList.toggle("fr", right);
+  }
+}
+window.addEventListener("resize", updateArrows);
+$("sub").addEventListener("click", (e) => {
+  const b = e.target.closest(".rchip"); if (!b) return;
+  // clicking the selected chip again goes back to All AI / Everywhere
+  const k = b.dataset.k;
+  if (tab === "ai") { aisub = k === aisub ? "" : k; store.set("aisub", aisub); }
+  else { region = k === region ? "" : k; store.set("region", region); }
+  shown = PAGE; render();
+});
+$("q").addEventListener("input", () => { shown = PAGE; render(); });
+$("src").addEventListener("change", () => { shown = PAGE; render(); });
+$("more").addEventListener("click", () => { shown += PAGE; render(); });
+function setRead(el, on) {
+  const id = el.dataset.id;
+  if (on) readIds.add(id); else readIds.delete(id);
+  saveRead();
+  el.classList.toggle("read", on);
+  const b = el.querySelector(".rd");
+  b.setAttribute("aria-pressed", String(on));
+  b.title = on ? "Read - click to mark unread" : "Mark as read";
+  b.setAttribute("aria-label", on ? "Mark unread" : "Mark read");
+}
+$("list").addEventListener("click", (e) => {
+  const rd = e.target.closest(".rd");
+  if (rd) { const el = rd.closest(".item"); setRead(el, !el.classList.contains("read")); return; }
+  const link = e.target.closest("a");
+  if (link) { setRead(link.closest(".item"), true); return; }
+  const a = e.target.closest(".item"); if (a) a.classList.toggle("open");
+});
+$("markRead").addEventListener("click", () => {
+  const all = tab === "all" && !region && !$("q").value && !$("src").value;
+  if (all) { lastRead = new Date().toISOString().slice(0, 19) + "Z"; store.set("lastRead", lastRead); }
+  filtered().forEach((i) => readIds.add(i.id)); saveRead(); render();
+});
+if (!TOPIC[tab]) tab = "all";
+if (!REGION[region] && region !== "") region = "";
+load();
+setInterval(load, 5 * 60 * 1000);
+</script>
+</body>
+</html>

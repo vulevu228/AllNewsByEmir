@@ -1,0 +1,85 @@
+name: news
+
+# Every 15 minutes: fetch the feeds, update news.json, email new concerning AI stories, publish the
+# page to GitHub Pages. GitHub can start scheduled runs late or skip one when it's busy.
+on:
+  schedule:
+    - cron: "4,19,34,49 * * * *"   # off the full quarter hours, when GitHub is busiest
+  workflow_dispatch:
+
+permissions:
+  contents: write     # monthly keep-alive commit (GitHub pauses schedules after 60 days without activity)
+  pages: write
+  id-token: write
+
+concurrency:
+  group: news
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # data/ = the page files + private state from the last run (Actions cache, never published)
+      - name: Restore data
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: news-data-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: news-data-
+
+      # first run only (no cache yet): start from an existing news.json so the 60 days of AI news carry over
+      - name: Seed news.json
+        if: steps.restore.outputs.cache-matched-key == '' && env.SEED_NEWS_URL != ''
+        env:
+          SEED_NEWS_URL: ${{ secrets.SEED_NEWS_URL }}
+        run: mkdir -p 'data/$web' && curl -sf --compressed "$SEED_NEWS_URL" -o 'data/$web/news.json'
+
+      - name: Update news
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ACS_CONNECTION_STRING: ${{ secrets.ACS_CONNECTION_STRING }}
+          ACS_SENDER: ${{ secrets.ACS_SENDER }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          PAGE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: python run.py
+
+      - name: Save data
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: news-data-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Page files only (state/ stays private)
+        run: mkdir _site && cp -r 'data/$web/.' _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Keep-alive commit (once a month)
+        run: |
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 30 * 86400 )) ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Keep-alive: scheduled runs pause after 60 days without commits"
+            git push
+          fi

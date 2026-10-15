@@ -159,14 +159,6 @@ select { max-width: 45%; }
 .hot .n { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .hot .up { color: var(--alert); } .hot .down { color: var(--ok); }
 .face a.lnk { color: var(--accent); text-decoration: none; } .face a.lnk:hover { text-decoration: underline; }
-.brief { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 18px 0 4px;
-  box-shadow: var(--shadow); border-left: 3px solid color-mix(in oklab, var(--tint) 70%, transparent); }
-.brief h2 { font-size: 13px; margin: 0; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
-  display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.brief h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
-.brief ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px; }
-.brief li a { color: var(--muted); font-size: 12px; margin-left: 4px; }
-.item .why { color: var(--alert); font-size: 13px; margin-top: 4px; -webkit-line-clamp: unset; }
 
 .day { margin: 26px 0 8px; font-size: 13px; font-weight: 600; color: var(--muted);
   text-transform: uppercase; letter-spacing: .06em; }
@@ -245,13 +237,12 @@ input[type=search] { font-family: var(--serif); font-style: italic; font-size: 1
   margin: 7px 0 6px; font-optical-sizing: auto; }
 .item.read h3 a { font-weight: 400; }
 .item p { font-family: var(--serif); font-size: 16px; line-height: 1.55; color: color-mix(in oklab, var(--ink) 72%, var(--muted)); }
-.item .why { font-style: italic; font-size: 14.5px; color: var(--alert); }
 .badge { font-family: var(--sans); font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
   border-radius: 2px; padding: 2px 6px; }
 .rd { width: 20px; height: 20px; margin-top: 4px; border-width: 1.5px; }
 
-.cost-head h2, .brief h2 { font: 650 18px/1.2 var(--display); letter-spacing: -.01em; text-transform: none; color: var(--ink); }
-.cost-head span, .brief h2 span { font-family: var(--sans); font-style: normal; font-size: 11px; letter-spacing: .07em;
+.cost-head h2 { font: 650 18px/1.2 var(--display); letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+.cost-head span { font-family: var(--sans); font-style: normal; font-size: 11px; letter-spacing: .07em;
   text-transform: uppercase; color: var(--muted); }
 .face { border-radius: 4px; box-shadow: none; padding: 16px 16px 14px; }
 .face .hd .l { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
@@ -263,15 +254,6 @@ input[type=search] { font-family: var(--serif); font-style: italic; font-size: 1
 .hot span:nth-child(3n+1) { font-family: var(--serif); font-size: 14px; }
 .face dt, .face dd { font-size: 12.5px; }
 
-.brief { border-radius: 3px; box-shadow: none; padding: 18px 22px 18px; border-left-width: 3px; }
-.brief h2 { display: flex; gap: 12px; align-items: baseline; }
-.brief ol { font-family: var(--serif); font-size: 17px; line-height: 1.5; gap: 10px; padding-left: 0; list-style: none;
-  counter-reset: pt; margin-top: 12px; }
-.brief li { counter-increment: pt; display: grid; grid-template-columns: 28px 1fr; }
-.brief li::before { content: counter(pt); font: 600 16px/1.5 var(--display);
-  color: color-mix(in oklab, var(--tint) 70%, var(--ink)); padding-top: 1px; }
-.brief li a { font-family: var(--sans); font-size: 10.5px; font-weight: 600; text-decoration: none; margin-left: 3px;
-  vertical-align: super; color: color-mix(in oklab, var(--tint) 70%, var(--ink)); }
 
 footer { font-family: var(--serif); font-style: italic; font-size: 13.5px; line-height: 1.7;
   border-top: 1px solid var(--line); padding-top: 14px; }
@@ -309,7 +291,6 @@ footer { font-family: var(--serif); font-style: italic; font-size: 13.5px; line-
       <select id="src" aria-label="Source"><option value="">All sources</option></select>
     </div>
   </div>
-  <section class="brief" id="brief" hidden></section>
   <main id="list" aria-live="polite"></main>
   <button class="chip more" id="more" hidden>Show more</button>
   <footer id="foot"></footer>
@@ -350,7 +331,6 @@ const saveRead = () => {
 const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const usd = (v) => "$" + (v < 1 ? v.toFixed(3) : v.toFixed(2));
 
 function ago(iso) {
   const s = (Date.now() - new Date(iso)) / 1000;
@@ -437,33 +417,14 @@ function render() {
         <b>${esc(it.source)}</b><span>${ago(it.published)}</span>
         ${badges(it)}
         ${confOf(it) != null ? `<span class="conf" title="How sure the topics and region of this story are (0-1): from the feed = 1.00, from words in the headline or summary lower; below 0.70 a topic or region is left off">confidence ${confOf(it).toFixed(2)}</span>` : ""}
-        ${it.concerning ? (it.ai_reason ? `<span class="badge alert" title="Checked by Claude Haiku">Concerning</span>`
-          : `<span class="badge alert" title="Matched: ${esc(it.hits.join(", "))}">Concerning: ${esc(it.hits.slice(0, 3).join(", "))}</span>`) : ""}
+        ${it.concerning ? `<span class="badge alert" title="Matched: ${esc(it.hits.join(", "))}">Concerning: ${esc(it.hits.slice(0, 3).join(", "))}</span>` : ""}
       </div>
       <h3><button class="rd" aria-pressed="${read}" title="${read ? "Read - click to mark unread" : "Mark as read"}" aria-label="${read ? "Mark unread" : "Mark read"}">${CHECK}</button><a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.title)}</a></h3>
       ${it.summary ? `<p>${esc(it.summary)}</p>` : ""}
-      ${it.concerning && it.ai_reason ? `<p class="why">Why: ${esc(it.ai_reason)}</p>` : ""}
     </article>`;
   }
   $("list").innerHTML = html || `<div class="empty">Nothing matches.</div>`;
-  renderBrief();
   $("more").hidden = items.length <= shown;
-}
-
-// daily Claude briefings sit on top of their topic tab (plain view only: not while searching,
-// filtering by source, or - on world topics - by region, since a briefing covers the whole world)
-const BRIEF_LABEL = { ai: "AI briefing", war: "War & conflict briefing" };
-function renderBrief() {
-  const all = news.briefings || (news.briefing ? { ai: news.briefing } : {});
-  const b = all[tab], el = $("brief");
-  const plain = !$("q").value && !$("src").value && (tab === "ai" ? !aisub : !region);
-  const show = b && b.points && b.points.length && plain;
-  el.hidden = !show;
-  if (!show) return;
-  const byId = Object.fromEntries(news.items.map((i) => [i.id, i]));
-  el.innerHTML = `<h2>${esc(BRIEF_LABEL[tab] || TOPIC[tab].l + " briefing")} <span>${esc(new Date(b.at).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }))} · written by Claude Haiku from the last 24 h${tab === "war" ? " of headlines + the World Events hotspot numbers" : ""}</span></h2>
-    <ol>${b.points.map((p) => `<li><span>${esc(p.text)}${p.ids.filter((i) => byId[i]).slice(0, 3).map((i, n) =>
-      `<a href="${esc(byId[i].link)}" target="_blank" rel="noopener" title="${esc(byId[i].source)}: ${esc(byId[i].title)}">[${n + 1}]</a>`).join("")}</span></li>`).join("")}</ol>`;
 }
 
 function renderFoot() {
@@ -471,7 +432,7 @@ function renderFoot() {
   const bad = f.filter(([, v]) => !v.ok);
   $("foot").innerHTML = `${f.length} feeds${bad.length ? `, <span class="bad">${bad.length} failing: ${bad.map(([k]) => esc(k)).join(", ")}</span>` : ", all healthy"}.
     AI stories are kept for 60 days, everything else for 3. Topics come from the feed plus keywords; regions from the feed or the first country named.
-    "Concerning" = an AI word and a security word (breach, malware, supply chain, leak...) in the same story from the AI feeds${news.ai && news.ai.on ? ", double-checked by Claude Haiku" : ""}; new ones are emailed.${news.ai && news.ai.on ? ` Claude this month: ${usd(news.ai.month_usd)} of $${news.ai.budget_usd} (${news.ai.calls} calls).` : ""}`;
+    "Concerning" = an AI word and a security word (breach, malware, supply chain, leak...) in the same story from the AI feeds; new ones are emailed.`;
   $("meta").textContent = `${news.items.length} stories, updated ${ago(news.updated)}`;
 }
 

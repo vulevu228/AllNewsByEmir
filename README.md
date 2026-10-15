@@ -17,10 +17,6 @@ GitHub Pages. No server, no database.
 - **Alerts**: a story is *concerning* when it mentions AI **and** an incident word (breach, hacked,
   malware, supply chain, leak, 0-day, rogue agent...) or three different risk words. New concerning
   stories from the last 48 h are emailed, one email per run.
-- **Claude Haiku (optional)**: with an `ANTHROPIC_API_KEY`, Haiku double-checks every story the keyword
-  rule finds risky (verdict + a short "why") and writes five-point daily briefings for AI and War &
-  conflict (the war one also gets the conflict hotspot numbers from
-  [World Events Live](https://worldeventslive.de)). Capped at `AI_BUDGET_USD` a month (default 1.5).
 - Search, source filter, read marks and "new since last visit" (kept in your browser only), dark mode,
   works on a phone.
 
@@ -29,20 +25,18 @@ GitHub Pages. No server, no database.
 run.py                       one update (also for local runs)
 news/newswatch.py            AI feeds, scoring, merging, alerts, email
 news/world.py                world feeds, topic keywords, country -> region
-news/ai.py                   Claude Haiku checks + daily briefings
 site/index.html              the page (one file, no build step)
 ```
 
 ## How state is kept without a database
 Each run restores `data/` from the GitHub Actions cache, updates it and saves it again. `data/$web/`
-(the page and `news.json`) is published to Pages; `data/state/` (what was already emailed, briefings,
-Claude usage) never leaves the cache.
+(the page and `news.json`) is published to Pages; `data/state/` (what was already emailed) never
+leaves the cache.
 
 ## Run it yourself
 1. Fork, then **Settings → Pages → Source: GitHub Actions**.
-2. Optional secrets (**Settings → Secrets and variables → Actions**): `ANTHROPIC_API_KEY` for Haiku;
-   `ACS_CONNECTION_STRING`, `ACS_SENDER`, `ALERT_TO` for alert emails (Azure Communication Services
-   Email, pay per email). Without them the page still works, just without checks and emails.
+2. Optional secrets (**Settings → Secrets and variables → Actions**): `ACS_CONNECTION_STRING`, `ACS_SENDER`, `ALERT_TO` for alert emails (Azure Communication Services
+   Email, pay per email). Without them the page still works, just without emails.
 3. **Actions → news → Run workflow** once; after that it runs on its own.
 
 Local run: `pip install -r requirements.txt`, then `python run.py --no-email` and

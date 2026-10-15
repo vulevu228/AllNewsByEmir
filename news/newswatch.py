@@ -3,13 +3,12 @@ All News by Emir - shared logic, run every 15 minutes by GitHub Actions (run.py)
 
 Pull AI + world news RSS feeds (world feeds live in world.py), merge them into news.json for the
 page, email an alert for new "concerning" stories from the AI feeds (a security word AND an AI word
-in the same story; with an ANTHROPIC_API_KEY, Claude Haiku double-checks them - ai.py) and write the
-daily briefings.
+in the same story).
 
 Data folder (DATA_DIR, default ./data):
   $web/index.html   the reading page (copied from site/ every run)
   $web/news.json    items shown on the page (AI feeds 60 days, world feeds 3)
-  state/news_state.json   private: what was already emailed, briefings, Claude usage
+  state/news_state.json   private: what was already emailed
 """
 
 import gzip
@@ -27,7 +26,7 @@ from pathlib import Path
 import feedparser
 import requests
 
-from . import ai, world
+from . import world
 
 UA = "Mozilla/5.0 (AINewsWatch RSS reader; personal use)"
 KEEP_DAYS = 60        # AI feeds
@@ -35,7 +34,6 @@ WORLD_KEEP_DAYS = 3   # world feeds: ~1500 stories a day, so keep the page file 
 MAX_ITEMS = 9000
 ALERT_MAX_AGE_H = 48  # never alert on old stories that a feed happens to re-list
 SITE_DIR = Path(__file__).resolve().parent.parent / "site"
-WORLD_EVENTS_MAP = "https://worldeventslive.de/map.json"
 
 # category: ai = news outlets, lab = the labs' own blogs, community = HN/blogs,
 # security = security outlets (only AI-related stories are kept from these)
@@ -251,14 +249,6 @@ def fetch_feed(feed):
     return items
 
 
-def hotspots():
-    """Top conflict hotspots (now vs the day before) from the World Events Live map, for the war briefing."""
-    r = requests.get(WORLD_EVENTS_MAP, timeout=30, headers={"User-Agent": UA})
-    r.raise_for_status()
-    return [{"name": h["name"], "now": h["now"], "prev": h["prev"]}
-            for h in r.json().get("hotspots", []) if h["now"] > 0][:4]
-
-
 def norm_title(t):
     return re.sub(r"[^a-z0-9 ]", "", t.lower())[:80]
 
@@ -316,8 +306,8 @@ def run_news(store, send=True):
         old = by_id.get(it["id"])
         if old:
             it["seen"] = old.get("seen", now_iso)
-            if old.get("ai_checked"):  # Claude's verdict replaces the keyword rule for good
-                it.update(concerning=old["concerning"], ai_reason=old.get("ai_reason", ""), ai_checked=True)
+            if old.get("ai_checked"):  # judged by Claude before the AI step was removed: don't email it again
+                alerted.add(it["id"])
         else:
             it["seen"] = now_iso
             new_ids.append(it["id"])
@@ -349,46 +339,8 @@ def run_news(store, send=True):
     kept_ids = {it["id"] for it in items}
     recent = (datetime.now(timezone.utc) - timedelta(hours=ALERT_MAX_AGE_H)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Claude Haiku: judge the keyword candidates (briefings follow below)
-    haiku = ai.Haiku(state)
-    if haiku.enabled:
-        first_ai = "ai_since" not in state
-        haiku.check([it for it in items if it["category"] in AI_CATS and it["score"] >= 1
-                     and not it.get("ai_checked") and it["published"] >= recent])
-        if first_ai:  # stories upgraded on the very first check are old news: don't email them
-            alerted.update(it["id"] for it in items if it.get("ai_checked") and it["concerning"])
-            state["ai_since"] = now_iso
-
-    try:
-        hot = hotspots()
-    except Exception as exc:  # the briefing must not depend on the map
-        logging.warning("hotspots failed: %s", exc)
-        hot = []
-
-    # daily briefings, one per topic in ai.BRIEF_TOPICS, written after 05:00 UTC
-    briefs = state.setdefault("briefings", {})
-    if "briefing" in state:  # the first version kept only the AI briefing
-        briefs.setdefault("ai", state.pop("briefing"))
-    if haiku.enabled and datetime.now(timezone.utc).hour >= 5:
-        for topic in ai.BRIEF_TOPICS:
-            if briefs.get(topic, {}).get("date") == now_iso[:10]:
-                continue
-            day = [it for it in items if it["published"] >= cutoff(1)
-                   and (it["category"] in AI_CATS if topic == "ai" else topic in it["tags"])]
-            context = ""
-            if topic == "war" and hot:
-                context = "GDELT armed-event score, last 24 h vs the 24 h before: " + "; ".join(
-                    f'{h["name"]} {h["now"]:.0f} vs {h["prev"]:.0f}' for h in hot)
-            points = haiku.briefing(topic, day, context)
-            if points:
-                briefs[topic] = {"date": now_iso[:10], "at": now_iso, "points": points}
-    usage = state.get("ai_usage", {}).get(now_iso[:7], {"usd": 0.0, "calls": 0})
-
     save_json(store, "$web", "news.json", {
-        "updated": now_iso, "feeds": feed_status, "items": items,
-        "briefings": state.get("briefings", {}),
-        "ai": {"on": haiku.client is not None, "month_usd": usage["usd"], "calls": usage["calls"],
-               "budget_usd": haiku.budget}}, gz=True)
+        "updated": now_iso, "feeds": feed_status, "items": items}, gz=True)
 
     # alerts
     to_alert = [it for it in items
@@ -408,6 +360,8 @@ def run_news(store, send=True):
         alerted.update(it["id"] for it in to_alert)
     # forget ids that fell off the page so state stays small
     state["alerted"] = sorted(a for a in alerted if a in kept_ids)
+    for k in ("briefings", "ai_usage", "ai_since"):
+        state.pop(k, None)
     state["last_news_run"] = now_iso
     save_json(store, "state", "news_state.json", state)
 
@@ -424,8 +378,7 @@ def page_url():
 def alert_text(items):
     lines = [f"{len(items)} new concerning AI stor{'y' if len(items) == 1 else 'ies'}:", ""]
     for it in items[:15]:
-        why = f"why: {it['ai_reason']}" if it.get("ai_reason") else f"matched: {', '.join(it['hits'])}"
-        lines += [f"* {it['title']}", f"  {it['source']} | {why}",
+        lines += [f"* {it['title']}", f"  {it['source']} | matched: {', '.join(it['hits'])}",
                   f"  {it['link']}", ""]
     if page_url():
         lines.append(f"All news: {page_url()}")
@@ -437,8 +390,7 @@ def alert_html(items):
         f'<p style="margin:0 0 16px"><a href="{html.escape(it["link"])}" style="font-size:16px;'
         f'color:#b42318;font-weight:600;text-decoration:none">{html.escape(it["title"])}</a><br>'
         f'<span style="color:#555;font-size:13px">{html.escape(it["source"])} &middot; '
-        + (f'why: {html.escape(it["ai_reason"])}' if it.get("ai_reason")
-           else f'matched: {html.escape(", ".join(it["hits"]))}') + '</span><br>'
+        f'matched: {html.escape(", ".join(it["hits"]))}</span><br>'
         f'<span style="font-size:14px;color:#222">{html.escape(it["summary"])}</span></p>'
         for it in items[:15])
     foot = (f'<p><a href="{html.escape(page_url())}">Open All News by Emir</a></p>' if page_url() else "")

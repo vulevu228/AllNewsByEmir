@@ -32,6 +32,7 @@ UA = "Mozilla/5.0 (AINewsWatch RSS reader; personal use)"
 KEEP_DAYS = 60        # AI feeds
 WORLD_KEEP_DAYS = 3   # world feeds: ~1500 stories a day, so keep the page file small
 MAX_ITEMS = 9000
+OG_PER_RUN = 40       # war stories whose feed has no picture: read the article's preview image (og:image), at most this many a run
 ALERT_MAX_AGE_H = 48  # never alert on old stories that a feed happens to re-list
 SITE_DIR = Path(__file__).resolve().parent.parent / "site"
 
@@ -194,6 +195,52 @@ def hn_entries(data):
     } for h in data.get("hits", [])]
 
 
+IMG_IN_HTML = re.compile(r'<img[^>]+src="(https://[^"]+)"', re.I)
+OG_IMAGE = re.compile(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)(?::src)?["\'][^>]*>', re.I)
+LOGO = re.compile(r"logo|placeholder|default[-_]|/social[-_]?share", re.I)
+CONTENT = re.compile(r'content=["\']([^"\']+)["\']', re.I)
+
+
+def image_of(e):
+    """The story's picture from the feed entry (media:content / media:thumbnail / an image enclosure / an <img> in the text), or None."""
+    for key in ("media_content", "media_thumbnail"):
+        for m in e.get(key) or []:
+            u = m.get("url") or ""
+            if u.startswith("https://") and (m.get("medium", "image") == "image" or re.search(r"\.(jpe?g|png|webp)", u, re.I)):
+                return u
+    for ln in e.get("links") or []:
+        if ln.get("rel") == "enclosure" and str(ln.get("type", "")).startswith("image") and str(ln.get("href", "")).startswith("https://"):
+            return ln["href"]
+    for text in [e.get("summary") or ""] + [c.get("value", "") for c in e.get("content") or []]:
+        m = IMG_IN_HTML.search(text)
+        if m:
+            return html.unescape(m.group(1))
+    return None
+
+
+def og_image(url):
+    """The preview picture an article page names for link previews (og:image / twitter:image), or None."""
+    try:
+        with requests.get(url, headers={"User-Agent": UA}, timeout=8, stream=True) as r:
+            if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
+                return None
+            head = b""
+            for chunk in r.iter_content(16384):
+                head += chunk
+                if b"</head>" in head.lower() or len(head) > 300_000:
+                    break
+        for tag in OG_IMAGE.findall(head.decode("utf-8", "replace")):
+            m = CONTENT.search(tag)
+            u = html.unescape(m.group(1)) if m else ""
+            if u.startswith("//"):
+                u = "https:" + u
+            if u.startswith("https://") and not LOGO.search(u):  # a site logo is not the story's picture
+                return u
+    except requests.RequestException:
+        pass
+    return None
+
+
 def fetch_feed(feed):
     name, cat, url, feed_tags, feed_region = feed
     is_ai = cat in AI_CATS
@@ -231,7 +278,7 @@ def fetch_feed(feed):
         region_conf = world.region_confidence(region, title, summary, feed_region)
         if region_conf < world.CONFIDENCE:
             region = None
-        items.append({
+        item = {
             "id": hashlib.sha1(link.encode()).hexdigest()[:16],
             "title": title,
             "link": link,
@@ -245,7 +292,11 @@ def fetch_feed(feed):
             "tags": sorted(tags),
             "region": region,
             "conf": {"topics": {t: conf[t] for t in sorted(tags)}, "region": region_conf if region else None},
-        })
+        }
+        img = image_of(e)
+        if img:
+            item["image"] = img
+        items.append(item)
     return items
 
 
@@ -306,6 +357,9 @@ def run_news(store, send=True):
         old = by_id.get(it["id"])
         if old:
             it["seen"] = old.get("seen", now_iso)
+            for k in ("image", "img_tried"):  # a picture found earlier (feed or article page) stays
+                if old.get(k) and not it.get(k):
+                    it[k] = old[k]
             if old.get("ai_checked"):  # judged by Claude before the AI step was removed: don't email it again
                 alerted.add(it["id"])
         else:
@@ -336,6 +390,16 @@ def run_news(store, send=True):
         seen_titles[key] = it
         deduped.append(it)
     items = deduped[:MAX_ITEMS]
+    # war stories without a picture in their feed (Al Jazeera, DW, CBS...): the article's own preview image, newest first,
+    # a few each run; tried once, so a page without one is not read again
+    need = [it for it in items if "war" in it.get("tags", []) and not it.get("image") and not it.get("img_tried")][:OG_PER_RUN]
+    if need:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            for it, img in zip(need, ex.map(lambda it: og_image(it["link"]), need)):
+                it["img_tried"] = 1
+                if img:
+                    it["image"] = img
+        logging.info("og:image: %d of %d war stories without a feed picture now have one", sum(1 for it in need if it.get("image")), len(need))
     kept_ids = {it["id"] for it in items}
     recent = (datetime.now(timezone.utc) - timedelta(hours=ALERT_MAX_AGE_H)).strftime("%Y-%m-%dT%H:%M:%SZ")
 

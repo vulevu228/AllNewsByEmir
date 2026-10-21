@@ -204,10 +204,14 @@ CONTENT = re.compile(r'content=["\']([^"\']+)["\']', re.I)
 def image_of(e):
     """The story's picture from the feed entry (media:content / media:thumbnail / an image enclosure / an <img> in the text), or None."""
     for key in ("media_content", "media_thumbnail"):
-        for m in e.get(key) or []:
-            u = m.get("url") or ""
-            if u.startswith("https://") and (m.get("medium", "image") == "image" or re.search(r"\.(jpe?g|png|webp)", u, re.I)):
-                return u
+        ms = [m for m in e.get(key) or [] if str(m.get("url") or "").startswith("https://")
+              and (m.get("medium", "image") == "image" or re.search(r"\.(jpe?g|png|webp)", m["url"], re.I))]
+        if ms:
+            w = lambda m: int(m.get("width") or 0)  # noqa: E731
+            big = [m for m in ms if w(m) >= 400]  # the smallest one at least 400 px wide (popup size), else the widest
+            u = (min(big, key=w) if big else max(ms, key=w))["url"]
+            u = re.sub(r"(ichef\.bbci\.co\.uk/[^/]+/[^/]+/)240/", r"\g<1>480/", u)  # BBC's feeds list 240 px; 480 exists too
+            return re.sub(r"(static01\.nyt\.com/.+)-mediumSquareAt3X\.jpg$", r"\g<1>-threeByTwoSmallAt2X.jpg", u)  # NYT lists 1800 px only
     for ln in e.get("links") or []:
         if ln.get("rel") == "enclosure" and str(ln.get("type", "")).startswith("image") and str(ln.get("href", "")).startswith("https://"):
             return ln["href"]

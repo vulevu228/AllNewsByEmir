@@ -197,12 +197,18 @@ def hn_entries(data):
 
 IMG_IN_HTML = re.compile(r'<img[^>]+src="(https://[^"]+)"', re.I)
 OG_IMAGE = re.compile(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)(?::src)?["\'][^>]*>', re.I)
-LOGO = re.compile(r"logo|placeholder|default[-_]|/social[-_]?share", re.I)
+LOGO = re.compile(r"logo|placeholder|default[-_]|_default|/social[-_]?share", re.I)  # an outlet's logo / default share picture
 CONTENT = re.compile(r'content=["\']([^"\']+)["\']', re.I)
 
 
 def image_of(e):
-    """The story's picture from the feed entry (media:content / media:thumbnail / an image enclosure / an <img> in the text), or None."""
+    """The story's own picture from the feed entry, or None - never the outlet's logo (ABC News sends one with every story)."""
+    u = feed_image(e)
+    return u if u and not LOGO.search(u) else None
+
+
+def feed_image(e):
+    """media:content / media:thumbnail / an image enclosure / an <img> in the text."""
     for key in ("media_content", "media_thumbnail"):
         ms = [m for m in e.get(key) or [] if str(m.get("url") or "").startswith("https://")
               and (m.get("medium", "image") == "image" or re.search(r"\.(jpe?g|png|webp)", m["url"], re.I))]
@@ -370,6 +376,9 @@ def run_news(store, send=True):
             it["seen"] = now_iso
             new_ids.append(it["id"])
         by_id[it["id"]] = it
+    for it in by_id.values():  # logos saved before the logo check (2026-10-21) go
+        if LOGO.search(it.get("image", "")):
+            del it["image"]
 
     def cutoff(days):
         return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")

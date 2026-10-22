@@ -267,6 +267,9 @@ def fetch_feed(feed):
         title = clean(e.get("title"))
         if not link or not title:
             continue
+        if not re.match(r"https?://[^\s\"'<>]+$", link.strip(), re.I):
+            continue  # a "javascript:" or "data:" link from a feed would run on every page that shows it
+        link = link.strip()
         ts = entry_time(e) or now
         if ts > now + timedelta(hours=1):
             ts = now

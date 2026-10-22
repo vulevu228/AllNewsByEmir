@@ -402,7 +402,16 @@ def run_news(store, send=True):
             continue
         seen_titles[key] = it
         deduped.append(it)
-    items = deduped[:MAX_ITEMS]
+    # the cap is for the fast world feeds: AI stories are few and already limited to KEEP_DAYS, and as the
+    # oldest items they would otherwise be the first ones cut
+    room = MAX_ITEMS - sum(1 for it in deduped if it["category"] in AI_CATS)
+    items = []
+    for it in deduped:
+        if it["category"] not in AI_CATS:
+            if room <= 0:
+                continue
+            room -= 1
+        items.append(it)
     # war stories without a picture in their feed (Al Jazeera, DW, CBS...): the article's own preview image, newest first,
     # a few each run; tried once, so a page without one is not read again
     need = [it for it in items if "war" in it.get("tags", []) and not it.get("image") and not it.get("img_tried")][:OG_PER_RUN]

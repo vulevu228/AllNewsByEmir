@@ -418,6 +418,11 @@ def run_news(store, send=True):
 
     save_json(store, "$web", "news.json", {
         "updated": now_iso, "feeds": feed_status, "items": items}, gz=True)
+    # the same stories, slim, for World Events Live's search bar (~1 MB on the wire instead of ~1.8):
+    # [id, title, link, source, topics, published, region, image, summary (first 160 chars)]
+    save_json(store, "$web", "search.json", {"updated": now_iso, "items": [
+        [it["id"], it["title"], it["link"], it["source"], [t for t in it.get("tags", []) if t != "world"] or [it.get("category", "")],
+         it["published"], it.get("region") or "", it.get("image") or "", (it.get("summary") or "")[:160]] for it in items]})
 
     # alerts
     to_alert = [it for it in items

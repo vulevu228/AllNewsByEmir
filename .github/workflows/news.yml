@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 12
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy_first.outputs.page_url || steps.deploy_retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +71,18 @@ jobs:
         with:
           path: _site
 
-      - id: deploy
+      # deploy-pages sometimes fails on GitHub's side ("Fetching artifact metadata failed", "Server Error");
+      # try once more after a short wait before failing the run
+      - id: deploy_first
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Wait before retry
+        if: steps.deploy_first.outcome == 'failure'
+        run: sleep 30
+
+      - id: deploy_retry
+        if: steps.deploy_first.outcome == 'failure'
         uses: actions/deploy-pages@v4
 
       - name: Keep-alive commit (once a month)

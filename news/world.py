@@ -136,7 +136,7 @@ WORLD_FEEDS = [
     ("NASA", ["space"], "https://www.nasa.gov/news-release/feed/", None),
     ("SpaceNews", ["space"], "https://spacenews.com/feed/", None),
     ("Spaceflight Now", ["space"], "https://spaceflightnow.com/feed/", None),
-    ("ESA", ["space"], "https://www.esa.int/rssfeed/Our_Activities/Space_News", None),
+    ("ESA", ["space"], "https://www.esa.int/rss/news.rss", None),
     ("Universe Today", ["space"], "https://www.universetoday.com/feed/", None),
     ("Ars Technica (all)", ["tech"], "https://feeds.arstechnica.com/arstechnica/index", None),
     ("The Verge (all)", ["tech"], "https://www.theverge.com/rss/index.xml", None),

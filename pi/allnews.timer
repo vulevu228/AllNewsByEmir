@@ -1,0 +1,9 @@
+[Unit]
+Description=All News by Emir every 5 minutes (2.5 min before each wel-layers run)
+
+[Timer]
+OnCalendar=*:00/5:00
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

@@ -105,7 +105,9 @@ class LocalStore:
     def put(self, container, name, data, content_type=None, cache=None, gz=False):
         p = self.root / container / name
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(data if isinstance(data, bytes) else data.encode("utf-8"))
+        tmp = p.with_name(p.name + ".tmp")  # write + rename: a reader (the Pi's WEL map) never sees a half-written file
+        tmp.write_bytes(data if isinstance(data, bytes) else data.encode("utf-8"))
+        os.replace(tmp, p)
 
 
 def store_from_env():
@@ -251,13 +253,37 @@ def og_image(url):
     return None
 
 
+def get_feed(url):
+    """The feed body. With FEED_CACHE_DIR set (the Pi, which runs every 5 min) the request is conditional:
+    the feed's ETag / Last-Modified from the last run go along, and an unchanged feed (304) costs the
+    site no download - the stored copy is used. Without it (GitHub Actions, fresh runner each time) a plain GET."""
+    cache = os.environ.get("FEED_CACHE_DIR")
+    headers, old = {"User-Agent": UA}, {}
+    if cache:
+        base = Path(cache) / hashlib.sha1(url.encode()).hexdigest()
+        body, meta = base.with_suffix(".body"), base.with_suffix(".json")
+        old = json.loads(meta.read_text()) if meta.exists() and body.exists() else {}
+        if old.get("etag"):
+            headers["If-None-Match"] = old["etag"]
+        if old.get("modified"):
+            headers["If-Modified-Since"] = old["modified"]
+    r = requests.get(url, headers=headers, timeout=25)
+    if cache and r.status_code == 304 and old:
+        return body.read_bytes()
+    r.raise_for_status()
+    if cache:
+        body.parent.mkdir(parents=True, exist_ok=True)
+        body.write_bytes(r.content)
+        meta.write_text(json.dumps({"etag": r.headers.get("ETag"), "modified": r.headers.get("Last-Modified")}))
+    return r.content
+
+
 def fetch_feed(feed):
     name, cat, url, feed_tags, feed_region = feed
     is_ai = cat in AI_CATS
     keep_days = KEEP_DAYS if is_ai else WORLD_KEEP_DAYS
-    r = requests.get(url, headers={"User-Agent": UA}, timeout=25)
-    r.raise_for_status()
-    entries = hn_entries(r.json()) if "hn.algolia.com" in url else feedparser.parse(r.content).entries
+    content = get_feed(url)
+    entries = hn_entries(json.loads(content)) if "hn.algolia.com" in url else feedparser.parse(content).entries
     now = datetime.now(timezone.utc)
     items = []
     for e in entries[:60]:  # some lab feeds list their whole history

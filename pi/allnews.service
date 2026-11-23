@@ -1,0 +1,17 @@
+[Unit]
+Description=All News by Emir: fetch the feeds into /mnt/ssd/allnews (read by the World Events map on this Pi)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=emir
+WorkingDirectory=/home/emir/allnews
+Environment=DATA_DIR=/mnt/ssd/allnews
+Environment=FEED_CACHE_DIR=/mnt/ssd/allnews/feedcache
+# --no-email: the alert emails stay with the GitHub Actions run (it also keeps the public page)
+ExecStart=/home/emir/venvs/allnews/bin/python run.py --no-email
+MemoryMax=300M
+CPUQuota=100%
+Nice=10
+TimeoutStartSec=4min

@@ -6,7 +6,7 @@ GitHub Pages. No server, no database.
 
 **Live:** https://vulevu228.github.io/AllNewsByEmir/
 
-- **World news**: ~115 feeds, kept for 3 days, under topic tabs (World, War & conflict, Economy, Industry,
+- **World news**: ~130 feeds, kept for 3 days, under topic tabs (World, War & conflict, Economy, Industry,
   Health, Diseases, Nature, Fun, Science, Space, Tech, Disasters, Energy, Politics) and a region row
   (North America, South America, Europe, Africa, Middle East, Asia, Oceania). Topics come from the feed
   plus keywords, regions from the feed or the first country named, each with a confidence score (topics

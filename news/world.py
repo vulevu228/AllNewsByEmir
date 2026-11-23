@@ -39,6 +39,7 @@ WORLD_FEEDS = [
     ("Buenos Aires Times", ["world"], "https://www.batimes.com.ar/feed", "sa"),
     ("Rio Times", ["world"], "https://www.riotimesonline.com/feed/", "sa"),
     ("Colombia One", ["world"], "https://colombiaone.com/feed/", "sa"),
+    ("Buenos Aires Herald", ["world"], "https://buenosairesherald.com/feed", "sa"),
     ("Guardian Americas", ["world"], "https://www.theguardian.com/world/americas/rss", None),
     # Europe
     ("BBC Europe", ["world"], "https://feeds.bbci.co.uk/news/world/europe/rss.xml", "eu"),
@@ -47,6 +48,13 @@ WORLD_FEEDS = [
     ("Politico Europe", ["world", "politics"], "https://www.politico.eu/feed/", "eu"),
     ("The Local Germany", ["world"], "https://feeds.thelocal.com/rss/de", "eu"),
     ("Kyiv Independent", ["world", "war"], "https://kyivindependent.com/news-archive/rss/", "eu"),
+    # 2026-11-23: regional range (names = the World Events map's own feed names, so it counts each story once)
+    ("Ukrainska Pravda", ["world", "war"], "https://www.pravda.com.ua/eng/rss/", "eu"),
+    ("Meduza", ["world"], "https://meduza.io/rss/en/all", "eu"),
+    ("Moscow Times", ["world"], "https://www.themoscowtimes.com/rss/news", "eu"),
+    ("Notes from Poland", ["world"], "https://notesfrompoland.com/feed/", "eu"),
+    ("Balkan Insight", ["world"], "https://balkaninsight.com/feed/", "eu"),
+    ("OC Media", ["world"], "https://oc-media.org/feed/", None),
     # Africa
     ("BBC Africa", ["world"], "https://feeds.bbci.co.uk/news/world/africa/rss.xml", "af"),
     ("AllAfrica", ["world"], "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf", "af"),
@@ -54,11 +62,15 @@ WORLD_FEEDS = [
     ("Africanews", ["world"], "https://www.africanews.com/feed/rss", "af"),
     ("Premium Times", ["world"], "https://www.premiumtimesng.com/feed", "af"),
     ("Daily Maverick", ["world"], "https://www.dailymaverick.co.za/dmrss/", "af"),
+    ("The East African", ["world"], "https://www.theeastafrican.co.ke/rss.xml", "af"),
     # Middle East
     ("BBC Middle East", ["world"], "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", "me"),
     ("Guardian Middle East", ["world"], "https://www.theguardian.com/world/middleeast/rss", "me"),
     ("Middle East Eye", ["world"], "https://www.middleeasteye.net/rss", "me"),
     ("Al-Monitor", ["world"], "https://www.al-monitor.com/rss", "me"),
+    ("Times of Israel", ["world"], "https://www.timesofisrael.com/feed/", "me"),
+    ("The National", ["world"], "https://www.thenationalnews.com/arc/outboundfeeds/rss/?outputType=xml", "me"),
+    ("Iran International", ["world"], "https://www.iranintl.com/en/feed", "me"),
     # Asia
     ("BBC Asia", ["world"], "https://feeds.bbci.co.uk/news/world/asia/rss.xml", "as"),
     ("SCMP", ["world"], "https://www.scmp.com/rss/91/feed", "as"),
@@ -68,6 +80,8 @@ WORLD_FEEDS = [
     ("Times of India", ["world"], "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", "as"),
     ("Yonhap", ["world"], "https://en.yna.co.kr/RSS/news.xml", "as"),
     ("The Hindu World", ["world"], "https://www.thehindu.com/news/international/feeder/default.rss", None),
+    ("Dawn", ["world"], "https://www.dawn.com/feeds/home", "as"),
+    ("The Irrawaddy", ["world"], "https://www.irrawaddy.com/feed", "as"),
     # Oceania
     ("ABC Australia", ["world"], "https://www.abc.net.au/news/feed/51120/rss.xml", "oc"),
     ("RNZ", ["world"], "https://www.rnz.co.nz/rss/national.xml", "oc"),

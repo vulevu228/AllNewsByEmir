@@ -22,6 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import feedparser
 import requests
@@ -253,28 +254,85 @@ def og_image(url):
     return None
 
 
+# Per-feed timing on the Pi (FEED_CACHE_DIR set; the run itself starts every 2 min). A feed is fetched again only after
+# the interval it asks for: 2 min when its Cache-Control max-age (and <ttl>, if any) allow 2 min, else the larger of
+# 5 min (the old Pi rate) and what it states, at most 30 min. Refused (403 / 429): wait 1 h, doubling up to 24 h, or
+# the Retry-After it sends; one good answer resets it. The Guardian refused the Pi from 2026-11-23 17:50 on, a few hours
+# after the 5-min runs began: it is never asked more than every 15 min.
+FAST_S, DEFAULT_S, CAP_S = 120, 300, 1800
+DOMAIN_MIN_S = {"theguardian.com": 900}
+BACKOFF_S, BACKOFF_MAX_S = 3600, 86400
+
+
+def _meta_paths(url):
+    base = Path(os.environ["FEED_CACHE_DIR"]) / hashlib.sha1(url.encode()).hexdigest()
+    return base.with_suffix(".body"), base.with_suffix(".json")
+
+
+def feed_due(url, now=None):
+    """True when the feed may be fetched now (always True off the Pi)."""
+    if not os.environ.get("FEED_CACHE_DIR"):
+        return True
+    _, meta = _meta_paths(url)
+    try:
+        return (now or time.time()) >= json.loads(meta.read_text()).get("next", 0)
+    except (FileNotFoundError, ValueError):
+        return True
+
+
+def feed_interval(url, headers, content):
+    """Seconds until this feed may be asked again, from what it says about itself."""
+    m = re.search(r"max-age=(\d+)", headers.get("Cache-Control") or "")
+    t = re.search(rb"<ttl>\s*(\d+)\s*</ttl>", (content or b"")[:20000])
+    max_age, ttl = (int(m[1]) if m else None), (int(t[1]) * 60 if t else None)
+    if max_age is not None and max_age <= FAST_S and (ttl is None or ttl <= FAST_S):
+        s = FAST_S
+    else:
+        s = min(CAP_S, max(DEFAULT_S, max_age or 0, ttl or 0))
+    host = re.sub(r"^www\.", "", urlparse(url).hostname or "")
+    return max(s, DOMAIN_MIN_S.get(host, 0))
+
+
 def get_feed(url):
-    """The feed body. With FEED_CACHE_DIR set (the Pi, which runs every 5 min) the request is conditional:
-    the feed's ETag / Last-Modified from the last run go along, and an unchanged feed (304) costs the
-    site no download - the stored copy is used. Without it (GitHub Actions, fresh runner each time) a plain GET."""
+    """The feed body. With FEED_CACHE_DIR set (the Pi) the request is conditional: the feed's ETag / Last-Modified
+    from the last run go along, and an unchanged feed (304) costs the site no download - the stored copy is used;
+    the next allowed fetch time is kept next to it (see feed_due). Without it (GitHub Actions) a plain GET."""
     cache = os.environ.get("FEED_CACHE_DIR")
     headers, old = {"User-Agent": UA}, {}
     if cache:
-        base = Path(cache) / hashlib.sha1(url.encode()).hexdigest()
-        body, meta = base.with_suffix(".body"), base.with_suffix(".json")
-        old = json.loads(meta.read_text()) if meta.exists() and body.exists() else {}
+        body, meta = _meta_paths(url)
+        try:
+            old = json.loads(meta.read_text())
+        except (FileNotFoundError, ValueError):
+            old = {}
+        if not body.exists():
+            old = {k: v for k, v in old.items() if k not in ("etag", "modified")}
         if old.get("etag"):
             headers["If-None-Match"] = old["etag"]
         if old.get("modified"):
             headers["If-Modified-Since"] = old["modified"]
     r = requests.get(url, headers=headers, timeout=25)
-    if cache and r.status_code == 304 and old:
-        return body.read_bytes()
+    now = time.time()
+    if cache and r.status_code in (403, 429):
+        fails = old.get("fails", 0) + 1
+        wait = min(BACKOFF_MAX_S, BACKOFF_S * 2 ** (fails - 1))
+        ra = r.headers.get("Retry-After", "")
+        if ra.isdigit():
+            wait = max(wait, int(ra))
+        meta.parent.mkdir(parents=True, exist_ok=True)
+        meta.write_text(json.dumps({**old, "fails": fails, "next": now + wait, "refused": r.status_code}))
+    if cache and r.status_code == 304 and old and body.exists():
+        content = body.read_bytes()
+        interval = feed_interval(url, r.headers, content)   # a 304 carries the feed's Cache-Control too
+        meta.write_text(json.dumps({**old, "interval": interval, "fails": 0, "next": now + interval}))
+        return content
     r.raise_for_status()
     if cache:
         body.parent.mkdir(parents=True, exist_ok=True)
         body.write_bytes(r.content)
-        meta.write_text(json.dumps({"etag": r.headers.get("ETag"), "modified": r.headers.get("Last-Modified")}))
+        interval = feed_interval(url, r.headers, r.content)
+        meta.write_text(json.dumps({"etag": r.headers.get("ETag"), "modified": r.headers.get("Last-Modified"),
+                                    "interval": interval, "next": now + interval, "fails": 0}))
     return r.content
 
 
@@ -362,8 +420,12 @@ def run_news(store, send=True):
 
     feed_status = {}
     fresh = []
+    due = [f for f in ALL_FEEDS if feed_due(f[2])]
+    for f in ALL_FEEDS:
+        if f not in due:  # not yet time for this feed (per-feed timing on the Pi): its stories stay from earlier runs
+            feed_status[f[0]] = {"ok": True, "n": 0, "skipped": "not due"}
     with ThreadPoolExecutor(max_workers=24) as pool:
-        futures = {pool.submit(fetch_feed, f): f[0] for f in ALL_FEEDS}
+        futures = {pool.submit(fetch_feed, f): f[0] for f in due}
         for fut, name in futures.items():
             try:
                 got = fut.result()

@@ -1,8 +1,8 @@
 [Unit]
-Description=All News by Emir every 5 minutes (2.5 min before each wel-layers run)
+Description=All News by Emir every 2 minutes (each feed only when its own interval is up: newswatch.feed_due)
 
 [Timer]
-OnCalendar=*:00/5:00
+OnCalendar=*:00/2:00
 AccuracySec=10s
 
 [Install]

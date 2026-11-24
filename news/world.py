@@ -63,6 +63,8 @@ WORLD_FEEDS = [
     ("Premium Times", ["world"], "https://www.premiumtimesng.com/feed", "af"),
     ("Daily Maverick", ["world"], "https://www.dailymaverick.co.za/dmrss/", "af"),
     ("The East African", ["world"], "https://www.theeastafrican.co.ke/rss.xml", "af"),
+    ("Libya Review", ["world"], "https://libyareview.com/feed/", "af"),
+    ("Libya Herald", ["world"], "https://www.libyaherald.com/feed/", "af"),
     # Middle East
     ("BBC Middle East", ["world"], "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", "me"),
     ("Guardian Middle East", ["world"], "https://www.theguardian.com/world/middleeast/rss", "me"),
